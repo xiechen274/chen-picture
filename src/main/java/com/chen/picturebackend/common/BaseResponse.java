@@ -1,6 +1,7 @@
 package com.chen.picturebackend.common;
 
 import com.chen.picturebackend.exception.ErrorCode;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import lombok.Data;
 
 import java.io.Serializable;

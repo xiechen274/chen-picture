@@ -10,11 +10,12 @@ public class ResultUtils {
     /**
      * 成功
      *
-     * @param data 数据
      * @param <T>  数据类型
+     * @param data 数据
+     * @param 注册成功
      * @return 响应
      */
-    public static <T> BaseResponse<T> success(T data) {
+    public static <T> BaseResponse<T> success(T data, String 注册成功) {
         return new BaseResponse<>(0, data, "ok");
     }
 
