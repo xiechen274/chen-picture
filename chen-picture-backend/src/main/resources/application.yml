@@ -5,6 +5,14 @@ server:
 spring:
   application:
     name: chen-picture-backend
+    # Redis 配置
+    redis:
+      database: 0
+      host: 127.0.0.1
+      port: 6379
+      timeout: 5000
+
+
 
   # 文件上传配置
   servlet:
@@ -16,6 +24,8 @@ spring:
     url: jdbc:mysql://localhost:3306/chen_picture
     username: root
     password: 15959244158
+
+
 
 mybatis-plus:
   configuration:

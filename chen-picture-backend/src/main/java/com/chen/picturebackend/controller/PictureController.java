@@ -1,6 +1,14 @@
 package com.chen.picturebackend.controller;
 
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.crypto.digest.MD5;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chen.picturebackend.annotation.AuthCheck;
 import com.chen.picturebackend.common.BaseResponse;
@@ -23,8 +31,14 @@ import com.chen.picturebackend.model.entity.vo.PictureTagCategory;
 import com.chen.picturebackend.model.entity.vo.PictureVO;
 import com.chen.picturebackend.service.PictureService;
 import com.chen.picturebackend.service.UserService;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.gson.JsonObject;
+import com.qcloud.cos.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,9 +49,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author xlj 2024-12-29
@@ -51,6 +67,19 @@ public class PictureController {
 
     @Resource
     PictureService pictureService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+
+    //使用Caffeine作为本地缓存
+    private final Cache<String, String> LOCAL_CACHE =
+            Caffeine.newBuilder().initialCapacity(1024)
+                    .maximumSize(10000L)
+                    // 缓存 5 分钟移除
+                    .expireAfterWrite(5L, TimeUnit.MINUTES)
+                    .build();
+
 
     /**
      * 上传图片到COS对象存储
@@ -180,6 +209,47 @@ public class PictureController {
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
     }
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                                      HttpServletRequest request) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫，最多每次查询 20 条
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 普通用户默认只能查看已过审的数据
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        // 构造缓存 key: 项目名称:接口:查询条件
+        String prefix = "chenpicture:listPictureVOByPageWithCache:";
+        String keyQueryBody = JSONObject.toJSONString(pictureQueryRequest);
+        String keyQueryBodyAfterMd5 = DigestUtil.md5Hex(keyQueryBody); // 对请求参数进行 MD5 加密，缩短请求长度
+        String key = prefix + keyQueryBodyAfterMd5;
+        Page<Picture> picturePage = null;
+        // 1.先查本地缓存（Caffeine）
+        String cacheVO = LOCAL_CACHE.getIfPresent(key);
+        if (StrUtil.isEmpty(cacheVO)) {
+            // 2. 本地缓存未命中，查 Redis 缓存
+            cacheVO = stringRedisTemplate.opsForValue().get(key);
+            if (StrUtil.isEmpty(cacheVO)) {
+                // 3. Redis 也未命中，查询数据库
+                picturePage = pictureService.page(new Page<>(current, size),
+                        pictureService.getQueryWrapper(pictureQueryRequest));
+                String cacheStr = JSONObject.toJSONString(picturePage);
+                // 将数据放入 Redis（增加随机过期时间，防止缓存雪崩）,并且放入本地缓存
+                int dataExpireTime = 60 * 4 + RandomUtil.randomInt(30, 80);
+                stringRedisTemplate.opsForValue().set(key, cacheStr, dataExpireTime, TimeUnit.SECONDS);
+                LOCAL_CACHE.put(key, cacheStr);
+                return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+            } else {
+                LOCAL_CACHE.put(key, cacheVO);
+                Page<PictureVO> pictureVO = JSON.parseObject(cacheVO, new TypeReference<Page<PictureVO>>() {});
+                return ResultUtils.success(pictureVO);
+            }
+        }
+        Page<PictureVO> pictureVO = JSON.parseObject(cacheVO, new TypeReference<Page<PictureVO>>() {});
+        return ResultUtils.success(pictureVO);
+    }
+
+
 
     /**
      * 编辑图片（给用户使用）
