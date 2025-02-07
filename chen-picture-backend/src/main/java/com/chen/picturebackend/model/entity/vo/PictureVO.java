@@ -14,6 +14,11 @@ import java.util.List;
  */
 @Data
 public class PictureVO implements Serializable {
+    /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
+
 
     /**
      * id

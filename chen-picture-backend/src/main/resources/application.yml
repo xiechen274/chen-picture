@@ -3,6 +3,12 @@ server:
   servlet:
     context-path: /api
 spring:
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          models: deepseek-r1:1.5b
   application:
     name: chen-picture-backend
     # Redis 配置

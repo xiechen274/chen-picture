@@ -112,6 +112,11 @@ public class Picture implements Serializable {
      * 更新时间
      */
     private Date updateTime;
+    /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
+
 
     /**
      * 是否删除
