@@ -10,6 +10,7 @@ import com.chen.picturebackend.model.entity.dto.picture.PictureReviewRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureUploadByBatchRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureUploadRequest;
 import com.chen.picturebackend.model.entity.vo.PictureVO;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,4 +69,7 @@ public interface PictureService extends IService<Picture> {
             User loginUser
     );
 
+
+    @Async
+    void clearPictureFile(Picture oldPicture);
 }

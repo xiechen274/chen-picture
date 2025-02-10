@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.chen.picturebackend.exception.BusinessException;
 import com.chen.picturebackend.exception.ErrorCode;
 import com.chen.picturebackend.exception.ThrowUtils;
+import com.chen.picturebackend.manager.CosManager;
 import com.chen.picturebackend.manager.FileManager;
 import com.chen.picturebackend.manager.upload.FilePictureUpload;
 import com.chen.picturebackend.manager.upload.PictureUploadTemplate;
@@ -26,15 +27,14 @@ import com.chen.picturebackend.model.entity.vo.UserVO;
 import com.chen.picturebackend.service.PictureService;
 import com.chen.picturebackend.mapper.PictureMapper;
 import com.chen.picturebackend.service.UserService;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 /**
@@ -56,6 +55,9 @@ import java.util.stream.Collectors;
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService{
     @Resource
     private FileManager fileManager;
+
+    @Resource
+    private CosManager cosManager;
 
     @Resource
     private UserService userService;
@@ -339,6 +341,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         return uploadCount;
     }
 
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        // 判断该图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        // 有不止一条记录用到了该图片，不清理
+        if (count > 1) {
+            return;
+        }
+        // FIXME 注意，这里的 url 包含了域名，实际上只要传 key 值（存储路径）就够了
+        cosManager.deleteObject(oldPicture.getUrl());
+        // 清理缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
+    }
 
 }
 
