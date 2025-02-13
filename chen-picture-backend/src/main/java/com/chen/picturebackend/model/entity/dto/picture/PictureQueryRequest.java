@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -93,6 +94,16 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      * 搜索词（同时搜名称、简介等）
      */
     private String searchText;
+    /**
+     * 开始编辑时间
+     */
+    private Date startEditTime;
+
+    /**
+     * 结束编辑时间
+     */
+    private Date endEditTime;
+
 
     /**
      * 用户 id
