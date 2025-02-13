@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chen.picturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.chen.picturebackend.model.entity.User;
+import com.chen.picturebackend.model.entity.dto.picture.PictureEditRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureQueryRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureReviewRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureUploadByBatchRequest;
@@ -72,4 +73,26 @@ public interface PictureService extends IService<Picture> {
 
     @Async
     void clearPictureFile(Picture oldPicture);
+
+    /**
+     * 删除图片
+     *
+     * @param pictureId
+     * @param loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+    /**
+     * 编辑图片
+     *
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+    /**
+     * 校验空间图片的权限
+     *
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 }

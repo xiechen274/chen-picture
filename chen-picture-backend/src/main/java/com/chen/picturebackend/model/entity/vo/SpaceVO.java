@@ -1,5 +1,6 @@
 package com.chen.picturebackend.model.entity.vo;
 
+import com.chen.picturebackend.model.entity.Space;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
@@ -82,11 +83,11 @@ public class SpaceVO implements Serializable {
      * @param spaceVO
      * @return
      */
-    public static generator.domain.Space voToObj(SpaceVO spaceVO) {
+    public static Space voToObj(SpaceVO spaceVO) {
         if (spaceVO == null) {
             return null;
         }
-        generator.domain.Space space = new generator.domain.Space();
+        Space space = new Space();
         BeanUtils.copyProperties(spaceVO, space);
         return space;
     }
@@ -97,7 +98,7 @@ public class SpaceVO implements Serializable {
      * @param space
      * @return
      */
-    public static SpaceVO objToVo(generator.domain.Space space) {
+    public static SpaceVO objToVo(Space space) {
         if (space == null) {
             return null;
         }

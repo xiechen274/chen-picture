@@ -2,7 +2,13 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    session:
+      cookie:
+        max-age: 2592000 # 30天
 spring:
+  session:
+    store-type: redis
+    timeout: 2592000 # 30天
   ai:
     ollama:
       base-url: http://localhost:11434
