@@ -2,11 +2,11 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/mapper/SpaceMapper.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/model/entity/Space.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/service/SpaceService.java" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/service/impl/SpaceServiceImpl.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/mapper/SpaceMapper.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/model/entity/Space.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/service/SpaceService.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/java/com/chen/picturebackend/service/impl/SpaceServiceImpl.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/resources/mapper/SpaceMapper.xml" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/chen-picture-backend/src/main/resources/mapper/SpaceMapper.xml" charset="UTF-8" />
   </component>
 </project>

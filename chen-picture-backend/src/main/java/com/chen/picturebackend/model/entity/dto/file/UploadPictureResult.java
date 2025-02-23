@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data
 public class UploadPictureResult {
+    /**
+     * 图片主色调
+     */
+
+    private String picColor;
 
     /**
      * 缩略图 url
