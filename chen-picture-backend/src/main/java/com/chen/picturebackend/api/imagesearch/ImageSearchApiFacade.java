@@ -7,6 +7,9 @@ package com.chen.picturebackend.api.imagesearch;
  */
 
 import com.chen.picturebackend.api.imagesearch.model.ImageSearchResult;
+import com.chen.picturebackend.api.imagesearch.sub.GetImageFirstUrlApi;
+import com.chen.picturebackend.api.imagesearch.sub.GetImageListApi;
+import com.chen.picturebackend.api.imagesearch.sub.GetImagePageUrlApi;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

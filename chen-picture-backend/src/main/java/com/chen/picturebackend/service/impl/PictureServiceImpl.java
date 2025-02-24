@@ -1,5 +1,6 @@
 package com.chen.picturebackend.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -7,6 +8,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.chen.picturebackend.api.aliyunai.AliYunAiApi;
+import com.chen.picturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.chen.picturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.chen.picturebackend.exception.BusinessException;
 import com.chen.picturebackend.exception.ErrorCode;
 import com.chen.picturebackend.exception.ThrowUtils;
@@ -19,6 +23,7 @@ import com.chen.picturebackend.model.entity.Picture;
 import com.chen.picturebackend.model.entity.Space;
 import com.chen.picturebackend.model.entity.User;
 import com.chen.picturebackend.model.entity.dto.file.UploadPictureResult;
+import com.chen.picturebackend.model.entity.dto.picture.CreatePictureOutPaintingTaskRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureEditByBatchRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureEditRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureQueryRequest;
@@ -53,18 +58,23 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 /**
-* @author 谢隆杰
-* @description 针对表【picture】的数据库操作Service实现
-* @createDate 2024-12-16 17:15:18
-*/
+ * @author 谢隆杰
+ * @description 针对表【picture】的数据库操作Service实现
+ * @createDate 2024-12-16 17:15:18
+ */
 @Slf4j
 @Service
-public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService{
+public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService {
     @Resource
     private FileManager fileManager;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     @Resource
     private CosManager cosManager;
@@ -83,7 +93,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private TransactionTemplate transactionTemplate;
-    
+
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
@@ -219,7 +229,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Date endEditTime = pictureQueryRequest.getEndEditTime();
 
 
-
         // 从多字段中搜索
         if (StrUtil.isNotBlank(searchText)) {
             // 需要拼接查询条件
@@ -253,6 +262,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
         return queryWrapper;
     }
+
     @Override
     public PictureVO getPictureVO(Picture picture, HttpServletRequest request) {
         // 对象转封装类
@@ -266,6 +276,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
         return pictureVO;
     }
+
     /**
      * 分页获取图片封装
      */
@@ -300,6 +311,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 图片校验
+     *
      * @param picture
      */
     @Override
@@ -321,6 +333,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 将前端传入的状态修改
+     *
      * @param pictureReviewRequest
      * @param loginUser
      */
@@ -348,6 +361,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         boolean result = this.updateById(updatePicture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
+
     @Override
     public void fillReviewParams(Picture picture, User loginUser) {
         if (userService.isAdmin(loginUser)) {
@@ -377,7 +391,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             log.error("获取页面失败", e);
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取页面失败");
         }
-        Element div =  document.getElementsByClass("dgControl").first();
+        Element div = document.getElementsByClass("dgControl").first();
         if (ObjUtil.isNull(div)) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
         }
@@ -614,10 +628,23 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
     }
 
-
-
-
-
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR));
+        // 权限校验
+        checkPictureAuth(loginUser, picture);
+        // 构造请求参数
+        CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        taskRequest.setInput(input);
+        BeanUtil.copyProperties(createPictureOutPaintingTaskRequest, taskRequest);
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(taskRequest);
+    }
 }
 
 
