@@ -9,6 +9,14 @@ spring:
   session:
     store-type: redis
     timeout: 2592000 # 30天
+
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/chen_picture
+    username: root
+    password: 15959244158
+
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -22,6 +30,11 @@ spring:
       host: 127.0.0.1
       port: 6379
       timeout: 5000
+
+# 阿里云 AI 配置
+aliYunAi:
+  apiKey: sk-df0c8d22f4ea46948670ab677e95095f
+
 
 
 

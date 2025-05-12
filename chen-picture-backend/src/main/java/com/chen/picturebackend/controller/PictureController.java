@@ -11,6 +11,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chen.picturebackend.annotation.AuthCheck;
+import com.chen.picturebackend.api.aliyunai.AliYunAiApi;
+import com.chen.picturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.chen.picturebackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.chen.picturebackend.api.imagesearch.ImageSearchApiFacade;
 import com.chen.picturebackend.api.imagesearch.model.ImageSearchResult;
 import com.chen.picturebackend.common.BaseResponse;
@@ -23,6 +26,7 @@ import com.chen.picturebackend.exception.ThrowUtils;
 import com.chen.picturebackend.model.entity.Picture;
 import com.chen.picturebackend.model.entity.Space;
 import com.chen.picturebackend.model.entity.User;
+import com.chen.picturebackend.model.entity.dto.picture.CreatePictureOutPaintingTaskRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureEditByBatchRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureEditRequest;
 import com.chen.picturebackend.model.entity.dto.picture.PictureQueryRequest;
@@ -79,6 +83,8 @@ public class PictureController {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private SpaceService spaceService;
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
 
     //使用Caffeine作为本地缓存
@@ -407,6 +413,33 @@ public class PictureController {
         List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
         return ResultUtils.success(resultList);
     }
+
+
+    /**
+     * 创建 AI 扩图任务
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(
+            @RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+            HttpServletRequest request) {
+        if (createPictureOutPaintingTaskRequest == null || createPictureOutPaintingTaskRequest.getPictureId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        CreateOutPaintingTaskResponse response = pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser);
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * 查询 AI 扩图任务
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(task);
+    }
+
 
 
 

@@ -13,13 +13,14 @@ import com.chen.picturebackend.exception.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * @author xlj
  * @date 2025-02-24
  * @description 调用阿里云百炼api
  */
-
+@Component
 public class AliYunAiApi {
     //读取配置文件获取密钥
     @Value("${aliYunAi.apiKey}")
