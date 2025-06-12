@@ -16,6 +16,11 @@ import java.util.Date;
 @Data
 public class SpaceVO implements Serializable {
     /**
+     * 空间类型：0-私有 1-团队
+     */
+    private Integer spaceType;
+
+    /**
      * id
      */
     private Long id;

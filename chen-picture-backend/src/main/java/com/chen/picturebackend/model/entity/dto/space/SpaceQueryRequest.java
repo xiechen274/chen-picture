@@ -21,6 +21,11 @@ import com.chen.picturebackend.common.PageRequest;
 public class SpaceQueryRequest extends PageRequest implements Serializable {
 
     /**
+     * 空间类型：0-私有 1-团队
+     */
+    private Integer spaceType;
+
+    /**
      * id
      */
     private Long id;
