@@ -1,5 +1,6 @@
 package com.chen.picturebackend.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -7,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.chen.picturebackend.exception.BusinessException;
 import com.chen.picturebackend.exception.ErrorCode;
+import com.chen.picturebackend.manager.auth.StpKit;
 import com.chen.picturebackend.model.entity.User;
 import com.chen.picturebackend.model.entity.enmus.UserRoleEnum;
 import com.chen.picturebackend.model.entity.vo.LoginUserVO;
@@ -84,7 +86,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户不存在或者密码错误");
         }
 
+        //保存用户信息到Sesison中
         request.getSession().setAttribute(USER_LOGIN_STATE,user);
+        //额外引入sa-token记录用户登录身份
+        // 4. 记录用户登录态到 Sa-token，便于空间鉴权时使用，注意保证该用户信息与 SpringSession 中的信息过期时间一致
+        StpKit.SPACE.login(user.getId());
+        StpKit.SPACE.getSession().set(USER_LOGIN_STATE, user);
         //返回脱敏后的用户信息
         return this.getLoginUserVO(user);
     }
